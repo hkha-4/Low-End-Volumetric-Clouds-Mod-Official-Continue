@@ -68,7 +68,7 @@ jobs:
         # Run standard dotnet compiler and override local KspPath references with download buffer
         dotnet build LowEndVolumetricCloudsMod.csproj -c Release -p:KspPath="ksp-refs"
 
-    - name: Stage Release Assets for Packaging
+    - name: Package Release Assets for CKAN & Manual Install
       shell: pwsh
       run: |
         $ErrorActionPreference = "Stop"
@@ -106,11 +106,16 @@ jobs:
         } else {
             Write-Warning "Warning: LowEndVolumetricCloudsMod.version file not found."
         }
+        
+        # 5. Compress the entire root GameData directory so unzipping matches GameData roots natively
+        Write-Host "Compressing directory output into package archive folder..."
+        Compress-Archive -Path "GameData" -DestinationPath "LowEndVolumetricCloudsMod.zip" -Force
+        Write-Host "Package creation complete: LowEndVolumetricCloudsMod.zip"
 
-    - name: Upload Build Artifact (.zip)
+    - name: Upload Build Artifact (Flat Single Zip)
       uses: actions/upload-artifact@v4
       with:
-        # GitHub uses this name directly as the filename of the downloaded .zip
-        name: LowEndVolumetricCloudsMod-${{ github.ref_name }}
-        path: GameData/
+        # TRICK: Naming the artifact with '.zip' prevents GitHub Actions v4 from wrapping it in another zip!
+        name: LowEndVolumetricCloudsMod.zip
+        path: LowEndVolumetricCloudsMod.zip
         if-no-files-found: error
