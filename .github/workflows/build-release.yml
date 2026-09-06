@@ -109,14 +109,14 @@ jobs:
         
         # 5. Compress the entire root GameData directory so unzipping matches GameData roots natively
         Write-Host "Compressing directory output into package archive folder..."
-        Compress-Archive -Path "GameData" -DestinationPath "LowEndVolumetricCloudsMod.zip" -Force
-        Write-Host "Package creation complete: LowEndVolumetricCloudsMod.zip"
+        Compress-Archive -Path "GameData" -DestinationPath "LowEndVolumetricCloudsModOfficialContinue.zip" -Force
+        Write-Host "Package creation complete: LowEndVolumetricCloudsModOfficialContinue.zip"
 
     - name: Upload Build Artifact (Guaranteed Raw Zip Delivery)
       uses: actions/upload-artifact@v7
       with:
-        # We pass your pre-compiled zip directly
-        path: LowEndVolumetricCloudsMod.zip
-        # By setting archive to false, GitHub won't bundle it into a secondary zip container!
+        # Pass your newly named pre-packaged zip directly to the workflow runner
+        path: LowEndVolumetricCloudsModOfficialContinue.zip
+        # Keeps the fix active so GitHub delivers it raw without applying another zip layer
         archive: false
         if-no-files-found: error
