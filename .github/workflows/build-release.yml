@@ -34,6 +34,8 @@ jobs:
     - name: Locate and Prepare KSP & Unity Reference Assemblies
       shell: pwsh
       run: |
+        $ErrorActionPreference = "Stop"
+        
         # Since game files are present in the repository, we locate and copy them to the reference directory
         # matching the expected structure $(KspPath)\KSP_x64_Data\Managed\
         New-Item -ItemType Directory -Force -Path "ksp-refs/KSP_x64_Data/Managed"
@@ -52,8 +54,7 @@ jobs:
                 Write-Host "Success: Found local $dll at $($file.FullName), copying into structured reference space..."
                 Copy-Item -Path $file.FullName -Destination "ksp-refs/KSP_x64_Data/Managed/$dll" -Force
             } else {
-                Write-Error "CRITICAL ERROR: Required reference assembly file '$dll' was not found in the repository!"
-                exit 1
+                throw "CRITICAL ERROR: Required reference assembly file '$dll' was not found in the repository!"
             }
         }
         
@@ -67,9 +68,11 @@ jobs:
         # Run standard dotnet compiler and override local KspPath references with download buffer
         dotnet build LowEndVolumetricCloudsMod.csproj -c Release -p:KspPath="ksp-refs"
 
-    - name: Package Release Assets for CKAN & Manual Install
+    - name: Stage Release Assets for Packaging
       shell: pwsh
       run: |
+        $ErrorActionPreference = "Stop"
+        
         # 1. Clean and build the precise GameData directory structure matching CKAN and KSP manual standards
         $gamedataPath = "GameData/LowEndVolumetricCloudsMod"
         $pluginsPath = "$gamedataPath/Plugins"
@@ -85,8 +88,7 @@ jobs:
             Copy-Item -Path $compiledDll -Destination $pluginsPath -Force
             Write-Host "Success: Copied Assembly DLL into Plugins directory."
         } else {
-            Write-Error "CRITICAL ERROR: Compiled binary not found at expected path: $compiledDll"
-            exit 1
+            throw "CRITICAL ERROR: Compiled binary not found at expected path: $compiledDll"
         }
         
         # 3. Gather Shader resources
@@ -104,15 +106,11 @@ jobs:
         } else {
             Write-Warning "Warning: LowEndVolumetricCloudsMod.version file not found."
         }
-        
-        # 5. Compress the entire root GameData directory so unzipping matches GameData roots natively
-        Write-Host "Compressing directory output into package archive folder..."
-        Compress-Archive -Path "GameData" -DestinationPath "LowEndVolumetricCloudsMod-${{ github.ref_name }}.zip" -Force
-        Write-Host "Package creation complete: LowEndVolumetricCloudsMod-${{ github.ref_name }}.zip"
 
     - name: Upload Build Artifact (.zip)
       uses: actions/upload-artifact@v4
       with:
+        # GitHub uses this name directly as the filename of the downloaded .zip
         name: LowEndVolumetricCloudsMod-${{ github.ref_name }}
-        path: LowEndVolumetricCloudsMod-${{ github.ref_name }}.zip
+        path: GameData/
         if-no-files-found: error
