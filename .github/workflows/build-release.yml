@@ -107,16 +107,16 @@ jobs:
             Write-Warning "Warning: LowEndVolumetricCloudsMod.version file not found."
         }
         
-        # 5. Create a dedicated output folder for raw file delivery
-        New-Item -ItemType Directory -Force -Path "output-zip"
-        
-        # 6. Compress the entire root GameData directory directly into that output folder
+        # 5. Compress the entire root GameData directory so unzipping matches GameData roots natively
         Write-Host "Compressing directory output into package archive folder..."
-        Compress-Archive -Path "GameData" -DestinationPath "output-zip/LowEndVolumetricCloudsMod.zip" -Force
-        Write-Host "Package creation complete."
+        Compress-Archive -Path "GameData" -DestinationPath "LowEndVolumetricCloudsMod.zip" -Force
+        Write-Host "Package creation complete: LowEndVolumetricCloudsMod.zip"
 
-    - name: Upload Build Artifact (Guaranteed Single Zip)
-      uses: actions/upload-pages-artifact@v3
+    - name: Upload Build Artifact (Guaranteed Raw Zip Delivery)
+      uses: actions/upload-artifact@v7
       with:
-        # This action locks down the file directory context so GitHub cannot double-zip the output file
-        path: output-zip/
+        # We pass your pre-compiled zip directly
+        path: LowEndVolumetricCloudsMod.zip
+        # By setting archive to false, GitHub won't bundle it into a secondary zip container!
+        archive: false
+        if-no-files-found: error
